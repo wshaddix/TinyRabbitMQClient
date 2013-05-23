@@ -21,6 +21,9 @@ All events are sent to a fanout exchange that is named after the event's .Net ty
 
 # Usage - Queuing Commands and Publishing Events#
 1. Add a configuration value in your web.config to hold the connection string. The connection string should conform to the [AMQP URI Specification](http://www.rabbitmq.com/uri-spec.html)
+```
+	<add key="amqpUri" value="amqp://username:password@server" />
+```
 
 2. Add code in your Application_Start() to connect to the RabbitMQ server
 ```
