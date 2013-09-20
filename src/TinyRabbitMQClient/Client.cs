@@ -69,6 +69,73 @@ namespace TinyRabbitMQClient
             _log.Debug(m => m("Queued {0}", command.GetType().FullName));
         }
 
+        public TEvent QueueCommandAndWaitForEvent<TCommand, TEvent>(TCommand command)
+        {
+            TEvent @event = default(TEvent);
+
+            // queue the command
+            QueueCommand(command);
+
+            // consume the event queue
+            var exchangeName = typeof(TEvent).FullName;
+            var queueName = string.Format("{0}.Incoming", exchangeName);
+            var msg = DeQueue(exchangeName, ExchangeType.Fanout, queueName);
+
+            // convert the event message into it's .Net type
+            @event = JsonConvert.DeserializeObject<TEvent>(msg);
+            
+            // return the event to the client
+            return @event;
+        }
+
+        public string DeQueue(string exchangeName, string exchangeType, string queueName)
+        {
+            // open a channel on the connection
+            _log.Debug(m => m("Opening channel on the amqp connection to consume a queue"));
+            using (var channel = _connection.CreateModel())
+            {
+                // ensure that the exchange exists
+                _log.Debug(m => m("Ensuring that the {0} exchange of type {1} exists", exchangeName, exchangeType));
+                channel.ExchangeDeclare(exchangeName, exchangeType, true);
+
+                // ensure that the incoming queue exists
+                _log.Debug(m => m("Ensuring that the {0} queue exists", queueName));
+                channel.QueueDeclare(queueName, true, false, false, null);
+
+                // bind the queue to the exchange
+                _log.Debug(m => m("Ensuring that the {0} exchange is bound to the {1} queue", exchangeName, queueName));
+                channel.QueueBind(queueName, exchangeName, string.Empty);
+
+                // create a consumer
+                var consumer = new QueueingBasicConsumer(channel);
+                _log.Debug(m => m("Consuming queue {0}", queueName));
+                channel.BasicConsume(queueName, false, consumer);
+
+                try
+                {
+                    // wait for a message to enter the queue
+                    _log.Debug(m => m("Waiting on a message from the {0} queue", queueName));
+                    var e = (BasicDeliverEventArgs)consumer.Queue.Dequeue();
+
+                    // extract the message body
+                    var body = Encoding.UTF8.GetString(e.Body);
+
+                    // acknowledge the message as processed
+                    _log.Debug(m => m("Processing was successful. Acknowledging."));
+                    channel.BasicAck(e.DeliveryTag, false);
+
+                    return body;
+                }
+                catch (EndOfStreamException)
+                {
+                    // the connection to the amqp server was lost
+                    _log.Fatal(m => m("Connection to the AMQP server was lost while waiting to dequeue the next message"));
+                }
+            }
+
+            return string.Empty;
+        }
+
         /// <summary>
         /// Used by clients that want to process messages from a queue
         /// </summary>

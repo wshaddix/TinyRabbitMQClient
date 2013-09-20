@@ -2,13 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>TinyRabbitMQClient</id>
-        <version>1.0.2</version>
+        <version>1.0.4</version>
         <authors>Wes Shaddix</authors>
         <language>en-US</language>
         <projectUrl>https://github.com/wshaddix/TinyRabbitMQClient/</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>A highly opinionated, simple to use and narrowly focused RabbitMQ client for .Net</description>
-        <releaseNotes>Now using Commong.Logging instead of our own custom logger to make it easier for clients to choose their logging strategy</releaseNotes>
+        <releaseNotes>Added a DeQueue method for retrieving one message from the specified queue and then disconnecting</releaseNotes>
         <dependencies>
             <dependency id="Newtonsoft.Json" version="5.0.6" />
             <dependency id="RabbitMQ.Client" version="3.1.1" />
