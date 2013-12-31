@@ -1,5 +1,6 @@
 TinyRabbitMQClient
 ==================
+[![](http://i.imgur.com/g1WHerF.png)](http://www.ndepend.com)
 
 A highly opinionated, simple to use and narrowly focused RabbitMQ client for .Net
 
